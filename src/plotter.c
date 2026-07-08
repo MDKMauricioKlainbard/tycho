@@ -92,6 +92,26 @@ void plotter_plot_xy(const Plotter *p, const double *x, const double *y, int cou
     free(safe_title);
 }
 
+void plotter_plot_multi_xy(const Plotter *p, const PlotSeries *series, int n_series)
+{
+    fprintf(p->pipe, "plot ");
+    for (int s = 0; s < n_series; s++)
+    {
+        char *safe_title = sanitize_gnuplot_string(series[s].title);
+        fprintf(p->pipe, "'-' with lines title '%s'%s", safe_title, (s < n_series - 1) ? ", " : "\n");
+        free(safe_title);
+    }
+
+    for (int s = 0; s < n_series; s++)
+    {
+        for (int i = 0; i < series[s].count; i++)
+        {
+            fprintf(p->pipe, "%f %f\n", series[s].x[i], series[s].y[i]);
+        }
+        fprintf(p->pipe, "e\n");
+    }
+}
+
 void plotter_destroy(Plotter *p)
 {
     if (p->pipe)

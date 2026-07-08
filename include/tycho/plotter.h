@@ -8,11 +8,6 @@ typedef struct
     FILE *pipe;
 } Plotter;
 
-typedef enum {
-    PLOTTER_OK = 0,
-    PLOTTER_CREATION_FAILED = 1
-} PlotterStatus;
-
 typedef struct
 {
     const double *x;
@@ -20,6 +15,11 @@ typedef struct
     int count;
     const char *title;
 } PlotSeries;
+
+typedef enum {
+    PLOTTER_OK = 0,
+    PLOTTER_CREATION_FAILED = 1
+} PlotterStatus;
 
 PlotterStatus plotter_create(Plotter *p);
 void plotter_set_title(const Plotter *p, const char *title);
