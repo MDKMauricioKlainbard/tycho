@@ -1,5 +1,6 @@
 #include <tycho/plotter.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef _WIN32
 #define POPEN _popen
@@ -8,6 +9,45 @@
 #define POPEN popen
 #define PCLOSE pclose
 #endif
+
+static char *sanitize_gnuplot_string(const char *input)
+{
+    int len = strlen(input);
+    int quote_count = 0;
+
+    for (int i = 0; i < len; i++)
+    {
+        if (input[i] == '\'')
+            quote_count++;
+    }
+
+    char *output = malloc(len + quote_count + 1);
+    if (!output)
+        return NULL;
+
+    if (quote_count == 0)
+    {
+        strcpy(output, input);
+        return output;
+    }
+
+    int j = 0;
+    for (int i = 0; i < len; i++)
+    {
+        if (input[i] == '\'')
+        {
+            output[j++] = '\'';
+            output[j++] = '\'';
+        }
+        else
+        {
+            output[j++] = input[i];
+        }
+    }
+    output[j] = '\0';
+
+    return output;
+}
 
 PlotterStatus plotter_create(Plotter *p)
 {
@@ -28,13 +68,20 @@ void plotter_set_title(const Plotter *p, const char *title)
 
 void plotter_set_labels(const Plotter *p, const char *xlabel, const char *ylabel)
 {
-    fprintf(p->pipe, "set xlabel '%s'\n", xlabel);
-    fprintf(p->pipe, "set ylabel '%s'\n", ylabel);
+    char *safe_xlabel = sanitize_gnuplot_string(xlabel);
+    char *safe_ylabel = sanitize_gnuplot_string(ylabel);
+
+    fprintf(p->pipe, "set xlabel '%s'\n", safe_xlabel ? safe_xlabel : "x");
+    fprintf(p->pipe, "set ylabel '%s'\n", safe_ylabel ? safe_ylabel : "y");
+
+    free(safe_xlabel);
+    free(safe_ylabel);
 }
 
 void plotter_plot_xy(const Plotter *p, const double *x, const double *y, int count, const char *series_title)
 {
-    fprintf(p->pipe, "plot '-' with lines title '%s'\n", series_title);
+    char *safe_title = sanitize_gnuplot_string(series_title);
+    fprintf(p->pipe, "plot '-' with lines title '%s'\n", safe_title ? safe_title : "Untitled");
 
     for (int i = 0; i < count; i++)
     {
@@ -42,11 +89,13 @@ void plotter_plot_xy(const Plotter *p, const double *x, const double *y, int cou
     }
 
     fprintf(p->pipe, "e\n");
+    free(safe_title);
 }
 
 void plotter_destroy(Plotter *p)
 {
-    if (p->pipe) {
+    if (p->pipe)
+    {
         PCLOSE(p->pipe);
         p->pipe = NULL;
     }
