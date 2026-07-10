@@ -130,6 +130,9 @@ static void write_2d_plot_command(FILE *pipe, const Figure2D *fig, int *next_id)
     else
         fprintf(pipe, "set yrange [*:*]\n");
 
+    fprintf(pipe, fig->log_x ? "set logscale x\n" : "unset logscale x\n");
+    fprintf(pipe, fig->log_y ? "set logscale y\n" : "unset logscale y\n");
+
     fprintf(pipe, "plot ");
     for (int s = 0; s < fig->series_count; s++)
     {
@@ -179,6 +182,10 @@ static void write_3d_plot_command(FILE *pipe, const Figure3D *fig, int *next_id)
         fprintf(pipe, "set zrange [%f:%f]\n", fig->zmin, fig->zmax);
     else
         fprintf(pipe, "set zrange [*:*]\n");
+
+    fprintf(pipe, fig->log_x ? "set logscale x\n" : "unset logscale x\n");
+    fprintf(pipe, fig->log_y ? "set logscale y\n" : "unset logscale y\n");
+    fprintf(pipe, fig->log_z ? "set logscale z\n" : "unset logscale z\n");
 
     fprintf(pipe, "splot ");
     for (int s = 0; s < fig->surfaces_count; s++)
@@ -245,6 +252,8 @@ FigureHandle2D plotter_new_figure_2d(Plotter *p)
     fig->ylabel = NULL;
     fig->has_xrange = 0;
     fig->has_yrange = 0;
+    fig->log_x = 0;
+    fig->log_y = 0;
 
     FigureHandle2D handle = p->figures_2d_count++;
 
@@ -273,6 +282,9 @@ FigureHandle3D plotter_new_figure_3d(Plotter *p)
     fig->has_xrange = 0;
     fig->has_yrange = 0;
     fig->has_zrange = 0;
+    fig->log_x = 0;
+    fig->log_y = 0;
+    fig->log_z = 0;
 
     FigureHandle3D handle = p->figures_3d_count++;
 
@@ -501,6 +513,51 @@ PlotterStatus plotter_set_zrange_3d(Plotter *p, FigureHandle3D fig, double zmin,
     p->figures_3d[fig].has_zrange = 1;
     p->figures_3d[fig].zmin = zmin;
     p->figures_3d[fig].zmax = zmax;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_logscale_x_2d(Plotter *p, FigureHandle2D fig, int enabled)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_2d[fig].log_x = enabled;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_logscale_y_2d(Plotter *p, FigureHandle2D fig, int enabled)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_2d[fig].log_y = enabled;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_logscale_x_3d(Plotter *p, FigureHandle3D fig, int enabled)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].log_x = enabled;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_logscale_y_3d(Plotter *p, FigureHandle3D fig, int enabled)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].log_y = enabled;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_logscale_z_3d(Plotter *p, FigureHandle3D fig, int enabled)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].log_z = enabled;
     return PLOTTER_OK;
 }
 

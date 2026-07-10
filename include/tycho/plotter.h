@@ -40,6 +40,9 @@ typedef struct
 
     int has_yrange;
     double ymin, ymax;
+
+    int log_x;
+    int log_y;
 } Figure2D;
 
 typedef struct
@@ -61,6 +64,10 @@ typedef struct
 
     int has_zrange;
     double zmin, zmax;
+
+    int log_x;
+    int log_y;
+    int log_z;
 } Figure3D;
 
 typedef struct
@@ -117,6 +124,13 @@ PlotterStatus plotter_set_zlabel_3d(Plotter *p, FigureHandle3D fig, const char *
 PlotterStatus plotter_set_xrange_3d(Plotter *p, FigureHandle3D fig, double xmin, double xmax);
 PlotterStatus plotter_set_yrange_3d(Plotter *p, FigureHandle3D fig, double ymin, double ymax);
 PlotterStatus plotter_set_zrange_3d(Plotter *p, FigureHandle3D fig, double zmin, double zmax);
+
+PlotterStatus plotter_set_logscale_x_2d(Plotter *p, FigureHandle2D fig, int enabled);
+PlotterStatus plotter_set_logscale_y_2d(Plotter *p, FigureHandle2D fig, int enabled);
+
+PlotterStatus plotter_set_logscale_x_3d(Plotter *p, FigureHandle3D fig, int enabled);
+PlotterStatus plotter_set_logscale_y_3d(Plotter *p, FigureHandle3D fig, int enabled);
+PlotterStatus plotter_set_logscale_z_3d(Plotter *p, FigureHandle3D fig, int enabled);
 
 void plotter_show(Plotter *p);
 void plotter_destroy(Plotter *p);
