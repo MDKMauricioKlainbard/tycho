@@ -102,6 +102,16 @@ static void write_2d_plot_command(FILE *pipe, const Figure2D *fig, int *next_id)
         write_datablock_2d(pipe, &fig->series[s], (*next_id)++);
     }
 
+    if (fig->has_xrange)
+        fprintf(pipe, "set xrange [%f:%f]\n", fig->xmin, fig->xmax);
+    else
+        fprintf(pipe, "set xrange [*:*]\n");
+
+    if (fig->has_yrange)
+        fprintf(pipe, "set yrange [%f:%f]\n", fig->ymin, fig->ymax);
+    else
+        fprintf(pipe, "set yrange [*:*]\n");
+
     fprintf(pipe, "plot ");
     for (int s = 0; s < fig->series_count; s++)
     {
@@ -132,6 +142,21 @@ static void write_3d_plot_command(FILE *pipe, const Figure3D *fig, int *next_id)
         write_datablock_3d(pipe, &fig->surfaces[s], (*next_id)++);
     }
 
+    if (fig->has_xrange)
+        fprintf(pipe, "set xrange [%f:%f]\n", fig->xmin, fig->xmax);
+    else
+        fprintf(pipe, "set xrange [*:*]\n");
+
+    if (fig->has_yrange)
+        fprintf(pipe, "set yrange [%f:%f]\n", fig->ymin, fig->ymax);
+    else
+        fprintf(pipe, "set yrange [*:*]\n");
+
+    if (fig->has_zrange)
+        fprintf(pipe, "set zrange [%f:%f]\n", fig->zmin, fig->zmax);
+    else
+        fprintf(pipe, "set zrange [*:*]\n");
+
     fprintf(pipe, "splot ");
     for (int s = 0; s < fig->surfaces_count; s++)
     {
@@ -152,6 +177,7 @@ static void write_3d_plot_command(FILE *pipe, const Figure3D *fig, int *next_id)
         free(safe_title);
     }
 }
+
 // ---------------------------------------------------------------------
 // API
 // ---------------------------------------------------------------------
@@ -169,10 +195,12 @@ PlotterStatus plotter_create(Plotter *p)
     p->figures_2d = NULL;
     p->figures_2d_count = 0;
     p->figures_2d_capacity = 0;
+    p->figures_2d_used = 0;
 
     p->figures_3d = NULL;
     p->figures_3d_count = 0;
     p->figures_3d_capacity = 0;
+    p->figures_3d_used = 0;
 
     return PLOTTER_OK;
 }
@@ -189,6 +217,8 @@ FigureHandle plotter_new_figure_2d(Plotter *p)
     fig->series = NULL;
     fig->series_count = 0;
     fig->series_capacity = 0;
+    fig->has_xrange = 0;
+    fig->has_yrange = 0;
 
     FigureHandle handle = p->figures_2d_count++;
 
@@ -210,6 +240,9 @@ FigureHandle plotter_new_figure_3d(Plotter *p)
     fig->surfaces = NULL;
     fig->surfaces_count = 0;
     fig->surfaces_capacity = 0;
+    fig->has_xrange = 0;
+    fig->has_yrange = 0;
+    fig->has_zrange = 0;
 
     FigureHandle handle = p->figures_3d_count++;
 
@@ -320,6 +353,60 @@ PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle fig, SeriesHand
         return PLOTTER_INVALID_HANDLE;
 
     f->surfaces[surface].style = style;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_xrange(Plotter *p, FigureHandle fig, double xmin, double xmax)
+{
+    if (fig >= 0 && fig < p->figures_2d_count)
+    {
+        p->figures_2d[fig].has_xrange = 1;
+        p->figures_2d[fig].xmin = xmin;
+        p->figures_2d[fig].xmax = xmax;
+        return PLOTTER_OK;
+    }
+
+    if (fig >= 0 && fig < p->figures_3d_count)
+    {
+        p->figures_3d[fig].has_xrange = 1;
+        p->figures_3d[fig].xmin = xmin;
+        p->figures_3d[fig].xmax = xmax;
+        return PLOTTER_OK;
+    }
+
+    return PLOTTER_INVALID_HANDLE;
+}
+
+PlotterStatus plotter_set_yrange(Plotter *p, FigureHandle fig, double ymin, double ymax)
+{
+    if (fig >= 0 && fig < p->figures_2d_count)
+    {
+        p->figures_2d[fig].has_yrange = 1;
+        p->figures_2d[fig].ymin = ymin;
+        p->figures_2d[fig].ymax = ymax;
+        return PLOTTER_OK;
+    }
+
+    if (fig >= 0 && fig < p->figures_3d_count)
+    {
+        p->figures_3d[fig].has_yrange = 1;
+        p->figures_3d[fig].ymin = ymin;
+        p->figures_3d[fig].ymax = ymax;
+        return PLOTTER_OK;
+    }
+
+    return PLOTTER_INVALID_HANDLE;
+}
+
+PlotterStatus plotter_set_zrange(Plotter *p, FigureHandle fig, double zmin, double zmax)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].has_zrange = 1;
+    p->figures_3d[fig].zmin = zmin;
+    p->figures_3d[fig].zmax = zmax;
+
     return PLOTTER_OK;
 }
 
