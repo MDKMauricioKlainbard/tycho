@@ -146,6 +146,16 @@ static void write_2d_plot_command(FILE *pipe, const Figure2D *fig, int *next_id)
             fprintf(pipe, " linecolor rgb '%s'", series->color);
         }
 
+        if (series->line_width > 0)
+        {
+            fprintf(pipe, " linewidth %f", series->line_width);
+        }
+
+        if (series->dash_type > 0)
+        {
+            fprintf(pipe, " dashtype %d", series->dash_type);
+        }
+
         fprintf(pipe, " title '%s'%s",
                 safe_title ? safe_title : "Untitled",
                 (s < fig->series_count - 1) ? ", " : "\n");
@@ -198,6 +208,16 @@ static void write_3d_plot_command(FILE *pipe, const Figure3D *fig, int *next_id)
         if (surf->color)
         {
             fprintf(pipe, " linecolor rgb '%s'", surf->color);
+        }
+
+        if (surf->line_width > 0)
+        {
+            fprintf(pipe, " linewidth %f", surf->line_width);
+        }
+
+        if (surf->dash_type > 0)
+        {
+            fprintf(pipe, " dashtype %d", surf->dash_type);
         }
 
         fprintf(pipe, " title '%s'%s",
@@ -313,6 +333,8 @@ SeriesHandle plotter_add_line(Plotter *p, FigureHandle2D fig, const double *x, c
     f->series[f->series_count].title = title;
     f->series[f->series_count].color = NULL;
     f->series[f->series_count].style = "lines";
+    f->series[f->series_count].line_width = 0;
+    f->series[f->series_count].dash_type = 0;
 
     return f->series_count++;
 }
@@ -338,6 +360,8 @@ SeriesHandle plotter_add_surface(Plotter *p, FigureHandle3D fig, const double *x
     f->surfaces[f->surfaces_count].title = title;
     f->surfaces[f->surfaces_count].color = NULL;
     f->surfaces[f->surfaces_count].style = "lines";
+    f->surfaces[f->surfaces_count].line_width = 0;
+    f->surfaces[f->surfaces_count].dash_type = 0;
 
     return f->surfaces_count++;
 }
@@ -558,6 +582,62 @@ PlotterStatus plotter_set_logscale_z_3d(Plotter *p, FigureHandle3D fig, int enab
         return PLOTTER_INVALID_HANDLE;
 
     p->figures_3d[fig].log_z = enabled;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_line_width(Plotter *p, FigureHandle2D fig, SeriesHandle series, double width)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure2D *f = &p->figures_2d[fig];
+
+    if (series < 0 || series >= f->series_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->series[series].line_width = width;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_line_dashtype(Plotter *p, FigureHandle2D fig, SeriesHandle series, int dashtype)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure2D *f = &p->figures_2d[fig];
+
+    if (series < 0 || series >= f->series_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->series[series].dash_type = dashtype;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_surface_width(Plotter *p, FigureHandle3D fig, SeriesHandle surface, double width)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure3D *f = &p->figures_3d[fig];
+
+    if (surface < 0 || surface >= f->surfaces_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->surfaces[surface].line_width = width;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_surface_dashtype(Plotter *p, FigureHandle3D fig, SeriesHandle surface, int dashtype)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure3D *f = &p->figures_3d[fig];
+
+    if (surface < 0 || surface >= f->surfaces_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->surfaces[surface].dash_type = dashtype;
     return PLOTTER_OK;
 }
 

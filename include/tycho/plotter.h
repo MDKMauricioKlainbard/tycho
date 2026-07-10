@@ -11,6 +11,8 @@ typedef struct
     const char *title;
     const char *color;
     const char *style;
+    double line_width;
+    int dash_type;
 } PlotSeries;
 
 typedef struct
@@ -23,6 +25,8 @@ typedef struct
     const char *title;
     const char *color;
     const char *style;
+    double line_width;
+    int dash_type;
 } Surface3D;
 
 typedef struct
@@ -131,6 +135,11 @@ PlotterStatus plotter_set_logscale_y_2d(Plotter *p, FigureHandle2D fig, int enab
 PlotterStatus plotter_set_logscale_x_3d(Plotter *p, FigureHandle3D fig, int enabled);
 PlotterStatus plotter_set_logscale_y_3d(Plotter *p, FigureHandle3D fig, int enabled);
 PlotterStatus plotter_set_logscale_z_3d(Plotter *p, FigureHandle3D fig, int enabled);
+
+PlotterStatus plotter_set_line_width(Plotter *p, FigureHandle2D fig, SeriesHandle series, double width);
+PlotterStatus plotter_set_line_dashtype(Plotter *p, FigureHandle2D fig, SeriesHandle series, int dashtype);
+PlotterStatus plotter_set_surface_width(Plotter *p, FigureHandle3D fig, SeriesHandle surface, double width);
+PlotterStatus plotter_set_surface_dashtype(Plotter *p, FigureHandle3D fig, SeriesHandle surface, int dashtype);
 
 void plotter_show(Plotter *p);
 void plotter_destroy(Plotter *p);
