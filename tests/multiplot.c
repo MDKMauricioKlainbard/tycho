@@ -68,12 +68,12 @@ int main()
         log_vals[i] = log(t[i] + 1.0);
     }
 
-    FigureHandle fig2d_1 = plotter_new_figure_2d(&p);
+    FigureHandle2D fig2d_1 = plotter_new_figure_2d(&p);
     plotter_add_line(&p, fig2d_1, t, sin_vals, n, "sin(t)");
     plotter_add_line(&p, fig2d_1, t, cos_vals, n, "cos(t)");
     plotter_add_line(&p, fig2d_1, t, tan_vals, n, "tan(0.3t)");
 
-    FigureHandle fig2d_2 = plotter_new_figure_2d(&p);
+    FigureHandle2D fig2d_2 = plotter_new_figure_2d(&p);
     plotter_add_line(&p, fig2d_2, t, exp_vals, n, "exp(-0.2t)");
     plotter_add_line(&p, fig2d_2, t, log_vals, n, "log(t+1)");
 
@@ -101,15 +101,15 @@ int main()
     generate_surface(x3, y3, z3a, nx, ny, 3.0, paraboloid);
     generate_surface(x3, y3, z3b, nx, ny, 3.0, cone);
 
-    FigureHandle fig3d_1 = plotter_new_figure_3d(&p);
+    FigureHandle3D fig3d_1 = plotter_new_figure_3d(&p);
     plotter_add_surface(&p, fig3d_1, x1, y1, z1a, nx, ny, "Paraboloid");
     plotter_add_surface(&p, fig3d_1, x1, y1, z1b, nx, ny, "Saddle");
 
-    FigureHandle fig3d_2 = plotter_new_figure_3d(&p);
+    FigureHandle3D fig3d_2 = plotter_new_figure_3d(&p);
     plotter_add_surface(&p, fig3d_2, x2, y2, z2a, nx, ny, "Ripple");
     plotter_add_surface(&p, fig3d_2, x2, y2, z2b, nx, ny, "Cone");
 
-    FigureHandle fig3d_3 = plotter_new_figure_3d(&p);
+    FigureHandle3D fig3d_3 = plotter_new_figure_3d(&p);
     plotter_add_surface(&p, fig3d_3, x3, y3, z3a, nx, ny, "Paraboloid 2");
     plotter_add_surface(&p, fig3d_3, x3, y3, z3b, nx, ny, "Cone 2");
 

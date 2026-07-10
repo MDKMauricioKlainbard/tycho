@@ -38,7 +38,7 @@ int main()
         }
     }
 
-    FigureHandle fig3d = plotter_new_figure_3d(&p);
+    FigureHandle3D fig3d = plotter_new_figure_3d(&p);
     plotter_add_surface(&p, fig3d, x, y, z, nx, ny, "Paraboloid");
 
     plotter_show(&p);

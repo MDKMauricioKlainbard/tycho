@@ -53,7 +53,7 @@ int main()
     generate_surface(x2, y2, z2, nx, ny, 3.0, saddle);
 
 
-    FigureHandle fig = plotter_new_figure_3d(&p);
+    FigureHandle3D fig = plotter_new_figure_3d(&p);
 
     SeriesHandle s1 = plotter_add_surface(&p, fig, x1, y1, z1, nx, ny, "Paraboloid");
     plotter_set_surface_color(&p, fig, s1, "#0000FF");

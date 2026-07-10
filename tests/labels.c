@@ -17,30 +17,33 @@ int main()
         return 1;
     }
 
-    int n = 200;
+    // --- Figura 2D: decaimiento exponencial, con titulo y labels propios ---
+    int n = 100;
     double *t = malloc(n * sizeof(double));
     double *y = malloc(n * sizeof(double));
 
     for (int i = 0; i < n; i++)
     {
         t[i] = i * 0.1;
-        y[i] = sin(t[i]);
+        y[i] = exp(-0.3 * t[i]);
     }
 
     FigureHandle2D fig2d = plotter_new_figure_2d(&p);
-    SeriesHandle s2d = plotter_add_line(&p, fig2d, t, y, n, "sin(t)");
-    plotter_set_line_color(&p, fig2d, s2d, "#FF0000");
+    SeriesHandle s2d = plotter_add_line(&p, fig2d, t, y, n, "exp(-0.3t)");
+    plotter_set_line_color(&p, fig2d, s2d, "#0000FF");
 
-    plotter_set_xrange_2d(&p, fig2d, 5.0, 10.0);
-    plotter_set_yrange_2d(&p, fig2d, -0.5, 0.5);
+    plotter_set_title_2d(&p, fig2d, "Exponential Decay");
+    plotter_set_xlabel_2d(&p, fig2d, "time (s)");
+    plotter_set_ylabel_2d(&p, fig2d, "amplitude");
 
-    int nx = 40, ny = 40;
+    // --- Figura 3D: paraboloide, con titulo y los tres labels propios ---
+    int nx = 30, ny = 30;
     int grid_size = nx * ny;
     double *x3 = malloc(grid_size * sizeof(double));
     double *y3 = malloc(grid_size * sizeof(double));
     double *z3 = malloc(grid_size * sizeof(double));
 
-    double range = 5.0;
+    double range = 3.0;
     for (int row = 0; row < ny; row++)
     {
         double yv = -range + (2.0 * range) * row / (ny - 1);
@@ -55,16 +58,20 @@ int main()
     }
 
     FigureHandle3D fig3d = plotter_new_figure_3d(&p);
-    SeriesHandle s3d = plotter_add_surface(&p, fig3d, x3, y3, z3, nx, ny, "Paraboloid");
-    plotter_set_surface_color(&p, fig3d, s3d, "#0000FF");
+    SeriesHandle s3d = plotter_add_surface(&p, fig3d, x3, y3, z3, nx, ny, "z = x^2 + y^2");
+    plotter_set_surface_color(&p, fig3d, s3d, "#FF00FF");
 
-    plotter_set_zrange_3d(&p, fig3d, 0.0, 20.0);
+    plotter_set_title_3d(&p, fig3d, "Paraboloid Surface");
+    plotter_set_xlabel_3d(&p, fig3d, "x axis");
+    plotter_set_ylabel_3d(&p, fig3d, "y axis");
+    plotter_set_zlabel_3d(&p, fig3d, "height");
 
     plotter_show(&p);
 
     printf("Plot generated. Close the gnuplot window manually when done.\n");
-    printf("Expected: 2D figure shows only t in [5,10], y in [-0.5,0.5].\n");
-    printf("Expected: 3D figure is clipped at z=20 (flat top), instead of the full bowl up to z=50.\n");
+    printf("Expected: 2D figure titled 'Exponential Decay' with its own axis labels.\n");
+    printf("Expected: 3D figure titled 'Paraboloid Surface' with x/y/z labels,\n");
+    printf("          NOT sharing the 2D figure's title or labels.\n");
 
     free(t);
     free(y);

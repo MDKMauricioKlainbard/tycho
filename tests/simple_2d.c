@@ -22,7 +22,7 @@ int main()
         y[i] = sin(t[i]);
     }
 
-    FigureHandle fig2d = plotter_new_figure_2d(&p);
+    FigureHandle2D fig2d = plotter_new_figure_2d(&p);
     plotter_add_line(&p, fig2d, t, y, n, "sin(t)");
 
     plotter_show(&p);

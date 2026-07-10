@@ -68,6 +68,20 @@ static int grow_buffer(void **buffer, int *capacity, size_t elem_size)
     return 0;
 }
 
+static void write_label(FILE *pipe, const char *command, const char *value)
+{
+    if (value)
+    {
+        char *safe = sanitize_gnuplot_string(value);
+        fprintf(pipe, "%s '%s'\n", command, safe ? safe : "");
+        free(safe);
+    }
+    else
+    {
+        fprintf(pipe, "%s ''\n", command);
+    }
+}
+
 static void write_datablock_2d(FILE *pipe, const PlotSeries *series, int id)
 {
     fprintf(pipe, "$D%d << EOD\n", id);
@@ -101,6 +115,10 @@ static void write_2d_plot_command(FILE *pipe, const Figure2D *fig, int *next_id)
     {
         write_datablock_2d(pipe, &fig->series[s], (*next_id)++);
     }
+
+    write_label(pipe, "set title", fig->title);
+    write_label(pipe, "set xlabel", fig->xlabel);
+    write_label(pipe, "set ylabel", fig->ylabel);
 
     if (fig->has_xrange)
         fprintf(pipe, "set xrange [%f:%f]\n", fig->xmin, fig->xmax);
@@ -141,6 +159,11 @@ static void write_3d_plot_command(FILE *pipe, const Figure3D *fig, int *next_id)
     {
         write_datablock_3d(pipe, &fig->surfaces[s], (*next_id)++);
     }
+
+    write_label(pipe, "set title", fig->title);
+    write_label(pipe, "set xlabel", fig->xlabel);
+    write_label(pipe, "set ylabel", fig->ylabel);
+    write_label(pipe, "set zlabel", fig->zlabel);
 
     if (fig->has_xrange)
         fprintf(pipe, "set xrange [%f:%f]\n", fig->xmin, fig->xmax);
@@ -205,7 +228,7 @@ PlotterStatus plotter_create(Plotter *p)
     return PLOTTER_OK;
 }
 
-FigureHandle plotter_new_figure_2d(Plotter *p)
+FigureHandle2D plotter_new_figure_2d(Plotter *p)
 {
     if (p->figures_2d_count == p->figures_2d_capacity)
     {
@@ -217,10 +240,13 @@ FigureHandle plotter_new_figure_2d(Plotter *p)
     fig->series = NULL;
     fig->series_count = 0;
     fig->series_capacity = 0;
+    fig->title = NULL;
+    fig->xlabel = NULL;
+    fig->ylabel = NULL;
     fig->has_xrange = 0;
     fig->has_yrange = 0;
 
-    FigureHandle handle = p->figures_2d_count++;
+    FigureHandle2D handle = p->figures_2d_count++;
 
     if (p->figures_2d_count > p->figures_2d_used)
         p->figures_2d_used = p->figures_2d_count;
@@ -228,7 +254,7 @@ FigureHandle plotter_new_figure_2d(Plotter *p)
     return handle;
 }
 
-FigureHandle plotter_new_figure_3d(Plotter *p)
+FigureHandle3D plotter_new_figure_3d(Plotter *p)
 {
     if (p->figures_3d_count == p->figures_3d_capacity)
     {
@@ -240,11 +266,15 @@ FigureHandle plotter_new_figure_3d(Plotter *p)
     fig->surfaces = NULL;
     fig->surfaces_count = 0;
     fig->surfaces_capacity = 0;
+    fig->title = NULL;
+    fig->xlabel = NULL;
+    fig->ylabel = NULL;
+    fig->zlabel = NULL;
     fig->has_xrange = 0;
     fig->has_yrange = 0;
     fig->has_zrange = 0;
 
-    FigureHandle handle = p->figures_3d_count++;
+    FigureHandle3D handle = p->figures_3d_count++;
 
     if (p->figures_3d_count > p->figures_3d_used)
         p->figures_3d_used = p->figures_3d_count;
@@ -252,7 +282,7 @@ FigureHandle plotter_new_figure_3d(Plotter *p)
     return handle;
 }
 
-SeriesHandle plotter_add_line(Plotter *p, FigureHandle fig, const double *x, const double *y, int count, const char *title)
+SeriesHandle plotter_add_line(Plotter *p, FigureHandle2D fig, const double *x, const double *y, int count, const char *title)
 {
     if (fig < 0 || fig >= p->figures_2d_count)
         return -1;
@@ -275,7 +305,7 @@ SeriesHandle plotter_add_line(Plotter *p, FigureHandle fig, const double *x, con
     return f->series_count++;
 }
 
-SeriesHandle plotter_add_surface(Plotter *p, FigureHandle fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title)
+SeriesHandle plotter_add_surface(Plotter *p, FigureHandle3D fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title)
 {
     if (fig < 0 || fig >= p->figures_3d_count)
         return -1;
@@ -300,7 +330,7 @@ SeriesHandle plotter_add_surface(Plotter *p, FigureHandle fig, const double *x, 
     return f->surfaces_count++;
 }
 
-PlotterStatus plotter_set_line_color(Plotter *p, FigureHandle fig, SeriesHandle series, const char *color)
+PlotterStatus plotter_set_line_color(Plotter *p, FigureHandle2D fig, SeriesHandle series, const char *color)
 {
     if (fig < 0 || fig >= p->figures_2d_count)
         return PLOTTER_INVALID_HANDLE;
@@ -314,7 +344,7 @@ PlotterStatus plotter_set_line_color(Plotter *p, FigureHandle fig, SeriesHandle 
     return PLOTTER_OK;
 }
 
-PlotterStatus plotter_set_line_style(Plotter *p, FigureHandle fig, SeriesHandle series, const char *style)
+PlotterStatus plotter_set_line_style(Plotter *p, FigureHandle2D fig, SeriesHandle series, const char *style)
 {
     if (fig < 0 || fig >= p->figures_2d_count)
         return PLOTTER_INVALID_HANDLE;
@@ -328,7 +358,7 @@ PlotterStatus plotter_set_line_style(Plotter *p, FigureHandle fig, SeriesHandle 
     return PLOTTER_OK;
 }
 
-PlotterStatus plotter_set_surface_color(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *color)
+PlotterStatus plotter_set_surface_color(Plotter *p, FigureHandle3D fig, SeriesHandle surface, const char *color)
 {
     if (fig < 0 || fig >= p->figures_3d_count)
         return PLOTTER_INVALID_HANDLE;
@@ -342,7 +372,7 @@ PlotterStatus plotter_set_surface_color(Plotter *p, FigureHandle fig, SeriesHand
     return PLOTTER_OK;
 }
 
-PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *style)
+PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle3D fig, SeriesHandle surface, const char *style)
 {
     if (fig < 0 || fig >= p->figures_3d_count)
         return PLOTTER_INVALID_HANDLE;
@@ -356,49 +386,114 @@ PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle fig, SeriesHand
     return PLOTTER_OK;
 }
 
-PlotterStatus plotter_set_xrange(Plotter *p, FigureHandle fig, double xmin, double xmax)
+PlotterStatus plotter_set_title_2d(Plotter *p, FigureHandle2D fig, const char *title)
 {
-    if (fig >= 0 && fig < p->figures_2d_count)
-    {
-        p->figures_2d[fig].has_xrange = 1;
-        p->figures_2d[fig].xmin = xmin;
-        p->figures_2d[fig].xmax = xmax;
-        return PLOTTER_OK;
-    }
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
 
-    if (fig >= 0 && fig < p->figures_3d_count)
-    {
-        p->figures_3d[fig].has_xrange = 1;
-        p->figures_3d[fig].xmin = xmin;
-        p->figures_3d[fig].xmax = xmax;
-        return PLOTTER_OK;
-    }
-
-    return PLOTTER_INVALID_HANDLE;
+    p->figures_2d[fig].title = title;
+    return PLOTTER_OK;
 }
 
-PlotterStatus plotter_set_yrange(Plotter *p, FigureHandle fig, double ymin, double ymax)
+PlotterStatus plotter_set_xlabel_2d(Plotter *p, FigureHandle2D fig, const char *label)
 {
-    if (fig >= 0 && fig < p->figures_2d_count)
-    {
-        p->figures_2d[fig].has_yrange = 1;
-        p->figures_2d[fig].ymin = ymin;
-        p->figures_2d[fig].ymax = ymax;
-        return PLOTTER_OK;
-    }
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
 
-    if (fig >= 0 && fig < p->figures_3d_count)
-    {
-        p->figures_3d[fig].has_yrange = 1;
-        p->figures_3d[fig].ymin = ymin;
-        p->figures_3d[fig].ymax = ymax;
-        return PLOTTER_OK;
-    }
-
-    return PLOTTER_INVALID_HANDLE;
+    p->figures_2d[fig].xlabel = label;
+    return PLOTTER_OK;
 }
 
-PlotterStatus plotter_set_zrange(Plotter *p, FigureHandle fig, double zmin, double zmax)
+PlotterStatus plotter_set_ylabel_2d(Plotter *p, FigureHandle2D fig, const char *label)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_2d[fig].ylabel = label;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_xrange_2d(Plotter *p, FigureHandle2D fig, double xmin, double xmax)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_2d[fig].has_xrange = 1;
+    p->figures_2d[fig].xmin = xmin;
+    p->figures_2d[fig].xmax = xmax;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_yrange_2d(Plotter *p, FigureHandle2D fig, double ymin, double ymax)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_2d[fig].has_yrange = 1;
+    p->figures_2d[fig].ymin = ymin;
+    p->figures_2d[fig].ymax = ymax;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_title_3d(Plotter *p, FigureHandle3D fig, const char *title)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].title = title;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_xlabel_3d(Plotter *p, FigureHandle3D fig, const char *label)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].xlabel = label;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_ylabel_3d(Plotter *p, FigureHandle3D fig, const char *label)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].ylabel = label;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_zlabel_3d(Plotter *p, FigureHandle3D fig, const char *label)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].zlabel = label;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_xrange_3d(Plotter *p, FigureHandle3D fig, double xmin, double xmax)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].has_xrange = 1;
+    p->figures_3d[fig].xmin = xmin;
+    p->figures_3d[fig].xmax = xmax;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_yrange_3d(Plotter *p, FigureHandle3D fig, double ymin, double ymax)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    p->figures_3d[fig].has_yrange = 1;
+    p->figures_3d[fig].ymin = ymin;
+    p->figures_3d[fig].ymax = ymax;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_zrange_3d(Plotter *p, FigureHandle3D fig, double zmin, double zmax)
 {
     if (fig < 0 || fig >= p->figures_3d_count)
         return PLOTTER_INVALID_HANDLE;
@@ -406,7 +501,6 @@ PlotterStatus plotter_set_zrange(Plotter *p, FigureHandle fig, double zmin, doub
     p->figures_3d[fig].has_zrange = 1;
     p->figures_3d[fig].zmin = zmin;
     p->figures_3d[fig].zmax = zmax;
-
     return PLOTTER_OK;
 }
 

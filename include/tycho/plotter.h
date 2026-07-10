@@ -31,6 +31,10 @@ typedef struct
     int series_count;
     int series_capacity;
 
+    const char *title;
+    const char *xlabel;
+    const char *ylabel;
+
     int has_xrange;
     double xmin, xmax;
 
@@ -43,6 +47,11 @@ typedef struct
     Surface3D *surfaces;
     int surfaces_count;
     int surfaces_capacity;
+
+    const char *title;
+    const char *xlabel;
+    const char *ylabel;
+    const char *zlabel;
 
     int has_xrange;
     double xmin, xmax;
@@ -69,7 +78,8 @@ typedef struct
     int figures_3d_used;
 } Plotter;
 
-typedef int FigureHandle;
+typedef int FigureHandle2D;
+typedef int FigureHandle3D;
 typedef int SeriesHandle;
 
 typedef enum
@@ -82,21 +92,31 @@ typedef enum
 
 PlotterStatus plotter_create(Plotter *p);
 
-FigureHandle plotter_new_figure_2d(Plotter *p);
-FigureHandle plotter_new_figure_3d(Plotter *p);
+FigureHandle2D plotter_new_figure_2d(Plotter *p);
+FigureHandle3D plotter_new_figure_3d(Plotter *p);
 
-SeriesHandle plotter_add_line(Plotter *p, FigureHandle fig, const double *x, const double *y, int count, const char *title);
-SeriesHandle plotter_add_surface(Plotter *p, FigureHandle fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title);
+SeriesHandle plotter_add_line(Plotter *p, FigureHandle2D fig, const double *x, const double *y, int count, const char *title);
+SeriesHandle plotter_add_surface(Plotter *p, FigureHandle3D fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title);
 
-PlotterStatus plotter_set_line_color(Plotter *p, FigureHandle fig, SeriesHandle series, const char *color);
-PlotterStatus plotter_set_line_style(Plotter *p, FigureHandle fig, SeriesHandle series, const char *style);
+PlotterStatus plotter_set_line_color(Plotter *p, FigureHandle2D fig, SeriesHandle series, const char *color);
+PlotterStatus plotter_set_line_style(Plotter *p, FigureHandle2D fig, SeriesHandle series, const char *style);
 
-PlotterStatus plotter_set_surface_color(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *color);
-PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *style);
+PlotterStatus plotter_set_surface_color(Plotter *p, FigureHandle3D fig, SeriesHandle surface, const char *color);
+PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle3D fig, SeriesHandle surface, const char *style);
 
-PlotterStatus plotter_set_xrange(Plotter *p, FigureHandle fig, double xmin, double xmax);
-PlotterStatus plotter_set_yrange(Plotter *p, FigureHandle fig, double ymin, double ymax);
-PlotterStatus plotter_set_zrange(Plotter *p, FigureHandle fig, double zmin, double zmax);
+PlotterStatus plotter_set_title_2d(Plotter *p, FigureHandle2D fig, const char *title);
+PlotterStatus plotter_set_xlabel_2d(Plotter *p, FigureHandle2D fig, const char *label);
+PlotterStatus plotter_set_ylabel_2d(Plotter *p, FigureHandle2D fig, const char *label);
+PlotterStatus plotter_set_xrange_2d(Plotter *p, FigureHandle2D fig, double xmin, double xmax);
+PlotterStatus plotter_set_yrange_2d(Plotter *p, FigureHandle2D fig, double ymin, double ymax);
+
+PlotterStatus plotter_set_title_3d(Plotter *p, FigureHandle3D fig, const char *title);
+PlotterStatus plotter_set_xlabel_3d(Plotter *p, FigureHandle3D fig, const char *label);
+PlotterStatus plotter_set_ylabel_3d(Plotter *p, FigureHandle3D fig, const char *label);
+PlotterStatus plotter_set_zlabel_3d(Plotter *p, FigureHandle3D fig, const char *label);
+PlotterStatus plotter_set_xrange_3d(Plotter *p, FigureHandle3D fig, double xmin, double xmax);
+PlotterStatus plotter_set_yrange_3d(Plotter *p, FigureHandle3D fig, double ymin, double ymax);
+PlotterStatus plotter_set_zrange_3d(Plotter *p, FigureHandle3D fig, double zmin, double zmax);
 
 void plotter_show(Plotter *p);
 void plotter_destroy(Plotter *p);

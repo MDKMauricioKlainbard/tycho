@@ -26,7 +26,7 @@ int main()
         noisy_vals[i] = sin(t[i]) + 0.1 * sin(t[i] * 15.0);
     }
 
-    FigureHandle fig = plotter_new_figure_2d(&p);
+    FigureHandle2D fig = plotter_new_figure_2d(&p);
 
     SeriesHandle s1 = plotter_add_line(&p, fig, t, sin_vals, n, "sin(t)");
     plotter_set_line_color(&p, fig, s1, "#FF0000");

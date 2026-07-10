@@ -31,6 +31,9 @@ target_link_libraries(test_style_3d PRIVATE tycho)
 add_executable(test_ranges tests/ranges.c)
 target_link_libraries(test_ranges PRIVATE tycho)
 
+add_executable(test_labels tests/labels.c)
+target_link_libraries(test_labels PRIVATE tycho)
+
 if(NOT WIN32)
     target_link_libraries(test_multiplot PRIVATE m)
     target_link_libraries(test_simple_2d PRIVATE m)
@@ -38,6 +41,7 @@ if(NOT WIN32)
     target_link_libraries(test_style_2d PRIVATE m)
     target_link_libraries(test_style_3d PRIVATE m)
     target_link_libraries(test_ranges PRIVATE m)
+    target_link_libraries(test_labels PRIVATE m)
 endif()
 
 if(NOT WIN32)
