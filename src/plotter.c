@@ -641,6 +641,25 @@ PlotterStatus plotter_set_surface_dashtype(Plotter *p, FigureHandle3D fig, Serie
     return PLOTTER_OK;
 }
 
+PlotterStatus plotter_set_grid(Plotter *p, int enabled)
+{
+    fprintf(p->pipe, enabled ? "set grid\n" : "unset grid\n");
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_legend_position(Plotter *p, const char *position)
+{
+    // position: "top left", "bottom right", "outside", etc. -- validos de gnuplot
+    fprintf(p->pipe, "set key %s\n", position);
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_window_size(Plotter *p, int width, int height)
+{
+    fprintf(p->pipe, "set terminal wxt size %d,%d\n", width, height);
+    return PLOTTER_OK;
+}
+
 void plotter_show(Plotter *p)
 {
     int has_2d = p->figures_2d_count > 0;

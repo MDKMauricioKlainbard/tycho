@@ -40,6 +40,9 @@ target_link_libraries(test_logscale PRIVATE tycho)
 add_executable(test_line_style_extras tests/line_style_extras.c)
 target_link_libraries(test_line_style_extras PRIVATE tycho)
 
+add_executable(test_plotter_options tests/plotter_options.c)
+target_link_libraries(test_plotter_options PRIVATE tycho)
+
 if(NOT WIN32)
     target_link_libraries(test_multiplot PRIVATE m)
     target_link_libraries(test_simple_2d PRIVATE m)
@@ -50,6 +53,7 @@ if(NOT WIN32)
     target_link_libraries(test_labels PRIVATE m)
     target_link_libraries(test_logscale PRIVATE m)
     target_link_libraries(test_line_style_extras PRIVATE m)
+    target_link_libraries(test_plotter_options PRIVATE m)
 endif()
 
 if(NOT WIN32)

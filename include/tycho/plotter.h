@@ -141,6 +141,10 @@ PlotterStatus plotter_set_line_dashtype(Plotter *p, FigureHandle2D fig, SeriesHa
 PlotterStatus plotter_set_surface_width(Plotter *p, FigureHandle3D fig, SeriesHandle surface, double width);
 PlotterStatus plotter_set_surface_dashtype(Plotter *p, FigureHandle3D fig, SeriesHandle surface, int dashtype);
 
+PlotterStatus plotter_set_grid(Plotter *p, int enabled);
+PlotterStatus plotter_set_legend_position(Plotter *p, const char *position);
+PlotterStatus plotter_set_window_size(Plotter *p, int width, int height);
+
 void plotter_show(Plotter *p);
 void plotter_destroy(Plotter *p);
 
