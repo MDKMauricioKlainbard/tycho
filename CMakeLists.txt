@@ -22,10 +22,18 @@ target_link_libraries(test_simple_2d PRIVATE tycho)
 add_executable(test_simple_3d tests/simple_3d.c)
 target_link_libraries(test_simple_3d PRIVATE tycho)
 
+add_executable(test_style_2d tests/style_2d.c)
+target_link_libraries(test_style_2d PRIVATE tycho)
+
+add_executable(test_style_3d tests/style_3d.c)
+target_link_libraries(test_style_3d PRIVATE tycho)
+
 if(NOT WIN32)
     target_link_libraries(test_multiplot PRIVATE m)
     target_link_libraries(test_simple_2d PRIVATE m)
     target_link_libraries(test_simple_3d PRIVATE m)
+    target_link_libraries(test_style_2d PRIVATE m)
+    target_link_libraries(test_style_3d PRIVATE m)
 endif()
 
 if(NOT WIN32)

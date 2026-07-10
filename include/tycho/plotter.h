@@ -9,6 +9,8 @@ typedef struct
     const double *y;
     int count;
     const char *title;
+    const char *color;  
+    const char *style; 
 } PlotSeries;
 
 typedef struct
@@ -16,9 +18,11 @@ typedef struct
     const double *x;
     const double *y;
     const double *z;
-    int nx; 
-    int ny;   
+    int nx;
+    int ny;
     const char *title;
+    const char *color;
+    const char *style;  
 } Surface3D;
 
 typedef struct
@@ -51,6 +55,7 @@ typedef struct
 } Plotter;
 
 typedef int FigureHandle;
+typedef int SeriesHandle;
 
 typedef enum
 {
@@ -65,8 +70,14 @@ PlotterStatus plotter_create(Plotter *p);
 FigureHandle plotter_new_figure_2d(Plotter *p);
 FigureHandle plotter_new_figure_3d(Plotter *p);
 
-PlotterStatus plotter_add_line(Plotter *p, FigureHandle fig, const double *x, const double *y, int count, const char *title);
-PlotterStatus plotter_add_surface(Plotter *p, FigureHandle fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title);
+SeriesHandle plotter_add_line(Plotter *p, FigureHandle fig, const double *x, const double *y, int count, const char *title);
+SeriesHandle plotter_add_surface(Plotter *p, FigureHandle fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title);
+
+PlotterStatus plotter_set_line_color(Plotter *p, FigureHandle fig, SeriesHandle series, const char *color);
+PlotterStatus plotter_set_line_style(Plotter *p, FigureHandle fig, SeriesHandle series, const char *style);
+
+PlotterStatus plotter_set_surface_color(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *color);
+PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *style);
 
 void plotter_show(Plotter *p);
 

@@ -105,11 +105,20 @@ static void write_2d_plot_command(FILE *pipe, const Figure2D *fig, int *next_id)
     fprintf(pipe, "plot ");
     for (int s = 0; s < fig->series_count; s++)
     {
-        char *safe_title = sanitize_gnuplot_string(fig->series[s].title);
-        fprintf(pipe, "$D%d with lines title '%s'%s",
-                first_id + s,
+        const PlotSeries *series = &fig->series[s];
+        char *safe_title = sanitize_gnuplot_string(series->title);
+
+        fprintf(pipe, "$D%d with %s", first_id + s, series->style ? series->style : "lines");
+
+        if (series->color)
+        {
+            fprintf(pipe, " linecolor rgb '%s'", series->color);
+        }
+
+        fprintf(pipe, " title '%s'%s",
                 safe_title ? safe_title : "Untitled",
                 (s < fig->series_count - 1) ? ", " : "\n");
+
         free(safe_title);
     }
 }
@@ -126,15 +135,23 @@ static void write_3d_plot_command(FILE *pipe, const Figure3D *fig, int *next_id)
     fprintf(pipe, "splot ");
     for (int s = 0; s < fig->surfaces_count; s++)
     {
-        char *safe_title = sanitize_gnuplot_string(fig->surfaces[s].title);
-        fprintf(pipe, "$D%d with lines title '%s'%s",
-                first_id + s,
+        const Surface3D *surf = &fig->surfaces[s];
+        char *safe_title = sanitize_gnuplot_string(surf->title);
+
+        fprintf(pipe, "$D%d with %s", first_id + s, surf->style ? surf->style : "lines");
+
+        if (surf->color)
+        {
+            fprintf(pipe, " linecolor rgb '%s'", surf->color);
+        }
+
+        fprintf(pipe, " title '%s'%s",
                 safe_title ? safe_title : "Untitled",
                 (s < fig->surfaces_count - 1) ? ", " : "\n");
+
         free(safe_title);
     }
 }
-
 // ---------------------------------------------------------------------
 // API
 // ---------------------------------------------------------------------
@@ -202,39 +219,40 @@ FigureHandle plotter_new_figure_3d(Plotter *p)
     return handle;
 }
 
-PlotterStatus plotter_add_line(Plotter *p, FigureHandle fig, const double *x, const double *y, int count, const char *title)
+SeriesHandle plotter_add_line(Plotter *p, FigureHandle fig, const double *x, const double *y, int count, const char *title)
 {
     if (fig < 0 || fig >= p->figures_2d_count)
-        return PLOTTER_INVALID_HANDLE;
+        return -1;
 
     Figure2D *f = &p->figures_2d[fig];
 
     if (f->series_count == f->series_capacity)
     {
         if (grow_buffer((void **)&f->series, &f->series_capacity, sizeof(PlotSeries)) != 0)
-            return PLOTTER_ALLOC_FAILED;
+            return -1;
     }
 
     f->series[f->series_count].x = x;
     f->series[f->series_count].y = y;
     f->series[f->series_count].count = count;
     f->series[f->series_count].title = title;
-    f->series_count++;
+    f->series[f->series_count].color = NULL;
+    f->series[f->series_count].style = "lines";
 
-    return PLOTTER_OK;
+    return f->series_count++;
 }
 
-PlotterStatus plotter_add_surface(Plotter *p, FigureHandle fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title)
+SeriesHandle plotter_add_surface(Plotter *p, FigureHandle fig, const double *x, const double *y, const double *z, int nx, int ny, const char *title)
 {
     if (fig < 0 || fig >= p->figures_3d_count)
-        return PLOTTER_INVALID_HANDLE;
+        return -1;
 
     Figure3D *f = &p->figures_3d[fig];
 
     if (f->surfaces_count == f->surfaces_capacity)
     {
         if (grow_buffer((void **)&f->surfaces, &f->surfaces_capacity, sizeof(Surface3D)) != 0)
-            return PLOTTER_ALLOC_FAILED;
+            return -1;
     }
 
     f->surfaces[f->surfaces_count].x = x;
@@ -243,8 +261,65 @@ PlotterStatus plotter_add_surface(Plotter *p, FigureHandle fig, const double *x,
     f->surfaces[f->surfaces_count].nx = nx;
     f->surfaces[f->surfaces_count].ny = ny;
     f->surfaces[f->surfaces_count].title = title;
-    f->surfaces_count++;
+    f->surfaces[f->surfaces_count].color = NULL;
+    f->surfaces[f->surfaces_count].style = "lines";
 
+    return f->surfaces_count++;
+}
+
+PlotterStatus plotter_set_line_color(Plotter *p, FigureHandle fig, SeriesHandle series, const char *color)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure2D *f = &p->figures_2d[fig];
+
+    if (series < 0 || series >= f->series_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->series[series].color = color;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_line_style(Plotter *p, FigureHandle fig, SeriesHandle series, const char *style)
+{
+    if (fig < 0 || fig >= p->figures_2d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure2D *f = &p->figures_2d[fig];
+
+    if (series < 0 || series >= f->series_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->series[series].style = style;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_surface_color(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *color)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure3D *f = &p->figures_3d[fig];
+
+    if (surface < 0 || surface >= f->surfaces_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->surfaces[surface].color = color;
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_surface_style(Plotter *p, FigureHandle fig, SeriesHandle surface, const char *style)
+{
+    if (fig < 0 || fig >= p->figures_3d_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    Figure3D *f = &p->figures_3d[fig];
+
+    if (surface < 0 || surface >= f->surfaces_count)
+        return PLOTTER_INVALID_HANDLE;
+
+    f->surfaces[surface].style = style;
     return PLOTTER_OK;
 }
 
