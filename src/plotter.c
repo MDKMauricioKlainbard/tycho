@@ -228,6 +228,35 @@ static void write_3d_plot_command(FILE *pipe, const Figure3D *fig, int *next_id)
     }
 }
 
+static void render_pending(Plotter *p)
+{
+    int has_2d = p->figures_2d_count > 0;
+    int has_3d = p->figures_3d_count > 0;
+
+    if (!has_2d && !has_3d)
+        return;
+
+    int rows = has_2d + has_3d;
+    int cols = p->figures_2d_count > p->figures_3d_count ? p->figures_2d_count : p->figures_3d_count;
+
+    int next_id = 0;
+
+    fprintf(p->pipe, "set multiplot layout %d,%d\n", rows, cols);
+
+    for (int i = 0; i < p->figures_2d_count; i++)
+    {
+        write_2d_plot_command(p->pipe, &p->figures_2d[i], &next_id);
+    }
+
+    for (int i = 0; i < p->figures_3d_count; i++)
+    {
+        write_3d_plot_command(p->pipe, &p->figures_3d[i], &next_id);
+    }
+
+    fprintf(p->pipe, "unset multiplot\n");
+    fflush(p->pipe);
+}
+
 // ---------------------------------------------------------------------
 // API
 // ---------------------------------------------------------------------
@@ -237,6 +266,9 @@ PlotterStatus plotter_create(Plotter *p)
     p->pipe = POPEN("gnuplot -persist", "w");
     if (!p->pipe)
         return PLOTTER_CREATION_FAILED;
+
+    p->window_width = 1200;
+    p->window_height = 800;
 
     fprintf(p->pipe, "set terminal wxt size 1200,800\n");
     fprintf(p->pipe, "set grid\n");
@@ -656,37 +688,15 @@ PlotterStatus plotter_set_legend_position(Plotter *p, const char *position)
 
 PlotterStatus plotter_set_window_size(Plotter *p, int width, int height)
 {
+    p->window_width = width;
+    p->window_height = height;
     fprintf(p->pipe, "set terminal wxt size %d,%d\n", width, height);
     return PLOTTER_OK;
 }
 
 void plotter_show(Plotter *p)
 {
-    int has_2d = p->figures_2d_count > 0;
-    int has_3d = p->figures_3d_count > 0;
-
-    if (!has_2d && !has_3d)
-        return;
-
-    int rows = has_2d + has_3d;
-    int cols = p->figures_2d_count > p->figures_3d_count ? p->figures_2d_count : p->figures_3d_count;
-
-    int next_id = 0;
-
-    fprintf(p->pipe, "set multiplot layout %d,%d\n", rows, cols);
-
-    for (int i = 0; i < p->figures_2d_count; i++)
-    {
-        write_2d_plot_command(p->pipe, &p->figures_2d[i], &next_id);
-    }
-
-    for (int i = 0; i < p->figures_3d_count; i++)
-    {
-        write_3d_plot_command(p->pipe, &p->figures_3d[i], &next_id);
-    }
-
-    fprintf(p->pipe, "unset multiplot\n");
-    fflush(p->pipe);
+    render_pending(p);
 
     for (int i = 0; i < p->figures_2d_count; i++)
     {
@@ -698,6 +708,27 @@ void plotter_show(Plotter *p)
     }
     p->figures_2d_count = 0;
     p->figures_3d_count = 0;
+}
+
+PlotterStatus plotter_save(Plotter *p, const char *filename)
+{
+    const char *ext = strrchr(filename, '.');
+    const char *terminal = (ext && strcmp(ext, ".pdf") == 0) ? "pdfcairo" : "pngcairo";
+
+    char *safe_filename = sanitize_gnuplot_string(filename);
+
+    fprintf(p->pipe, "set terminal %s size %d,%d\n", terminal, p->window_width, p->window_height);
+    fprintf(p->pipe, "set output '%s'\n", safe_filename ? safe_filename : filename);
+
+    render_pending(p);
+
+    fprintf(p->pipe, "set output\n");
+    fprintf(p->pipe, "set terminal wxt size %d,%d\n", p->window_width, p->window_height);
+    fflush(p->pipe);
+
+    free(safe_filename);
+
+    return PLOTTER_OK;
 }
 
 void plotter_destroy(Plotter *p)

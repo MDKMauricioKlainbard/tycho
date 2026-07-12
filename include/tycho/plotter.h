@@ -121,6 +121,9 @@ typedef struct
     int figures_3d_count;
     int figures_3d_capacity;
     int figures_3d_used;
+
+    int window_width;
+    int window_height;
 } Plotter;
 
 /** @brief Opaque handle to a Figure2D, returned by plotter_new_figure_2d(). */
@@ -355,6 +358,32 @@ PlotterStatus plotter_set_legend_position(Plotter *p, const char *position);
 
 /** @brief Resizes the plot window, in pixels. */
 PlotterStatus plotter_set_window_size(Plotter *p, int width, int height);
+
+/**
+ * @brief Renders the currently pending figures to an image file instead of the screen.
+ *
+ * The output format is chosen from the file extension: ".pdf" produces a
+ * PDF via gnuplot's pdfcairo terminal, anything else produces a PNG via
+ * pngcairo. Uses the same window size configured with plotter_set_window_size().
+ *
+ * Unlike plotter_show(), this does not clear the pending figures, so you
+ * can call plotter_save() and then plotter_show() (or vice versa) to get
+ * both a file and an interactive window from the same set of figures.
+ *
+ * @param p         The plotter.
+ * @param filename  Output path, e.g. "plot.png" or "plot.pdf".
+ *
+ * @return PLOTTER_OK.
+ *
+ * @code
+ * FigureHandle2D fig = plotter_new_figure_2d(&p);
+ * plotter_add_line(&p, fig, x, y, n, "curve");
+ *
+ * plotter_save(&p, "curve.png");   // write to disk
+ * plotter_show(&p);                // also show interactively, clears pending state
+ * @endcode
+ */
+PlotterStatus plotter_save(Plotter *p, const char *filename);
 
 /**
  * @brief Renders every figure added so far, as a multiplot grid.
