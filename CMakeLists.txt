@@ -49,6 +49,9 @@ target_link_libraries(test_save PRIVATE tycho)
 add_executable(test_multi_plotter tests/multi_plotter.c)
 target_link_libraries(test_multi_plotter PRIVATE tycho)
 
+add_executable(test_terminal tests/terminal.c)
+target_link_libraries(test_terminal PRIVATE tycho)
+
 if(NOT WIN32)
     target_link_libraries(test_multiplot PRIVATE m)
     target_link_libraries(test_simple_2d PRIVATE m)
@@ -62,6 +65,7 @@ if(NOT WIN32)
     target_link_libraries(test_plotter_options PRIVATE m)
     target_link_libraries(test_save PRIVATE m)
     target_link_libraries(test_multi_plotter PRIVATE m)
+    target_link_libraries(test_terminal PRIVATE m)
 endif()
 
 if(NOT WIN32)

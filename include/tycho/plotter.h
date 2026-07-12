@@ -124,6 +124,7 @@ typedef struct
 
     int window_width;
     int window_height;
+    char terminal[32];
 } Plotter;
 
 /** @brief Opaque handle to a Figure2D, returned by plotter_new_figure_2d(). */
@@ -384,6 +385,20 @@ PlotterStatus plotter_set_window_size(Plotter *p, int width, int height);
  * @endcode
  */
 PlotterStatus plotter_save(Plotter *p, const char *filename);
+
+/**
+ * @brief Sets which gnuplot terminal to use for interactive display.
+ *
+ * @param p         The plotter.
+ * @param terminal  Gnuplot terminal name, e.g. "wxt", "qt", "x11". Must be
+ *                   shorter than 32 characters.
+ *
+ * @return PLOTTER_OK, or PLOTTER_INVALID_HANDLE if the name is too long.
+ *
+ * @note Defaults to "wxt" if never called. Does not affect plotter_save(),
+ *       which always uses pngcairo/pdfcairo regardless of this setting.
+ */
+PlotterStatus plotter_set_terminal(Plotter *p, const char *terminal);
 
 /**
  * @brief Renders every figure added so far, as a multiplot grid.

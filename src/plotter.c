@@ -269,8 +269,9 @@ PlotterStatus plotter_create(Plotter *p)
 
     p->window_width = 1200;
     p->window_height = 800;
+    strcpy(p->terminal, "wxt");
 
-    fprintf(p->pipe, "set terminal wxt size 1200,800\n");
+    fprintf(p->pipe, "set terminal %s size %d,%d\n", p->terminal, p->window_width, p->window_height);
     fprintf(p->pipe, "set grid\n");
     fprintf(p->pipe, "set key bottom right\n");
 
@@ -690,7 +691,7 @@ PlotterStatus plotter_set_window_size(Plotter *p, int width, int height)
 {
     p->window_width = width;
     p->window_height = height;
-    fprintf(p->pipe, "set terminal wxt size %d,%d\n", width, height);
+    fprintf(p->pipe, "set terminal %s size %d,%d\n", p->terminal, width, height);
     return PLOTTER_OK;
 }
 
@@ -723,11 +724,21 @@ PlotterStatus plotter_save(Plotter *p, const char *filename)
     render_pending(p);
 
     fprintf(p->pipe, "set output\n");
-    fprintf(p->pipe, "set terminal wxt size %d,%d\n", p->window_width, p->window_height);
+    fprintf(p->pipe, "set terminal %s size %d,%d\n", p->terminal, p->window_width, p->window_height); // <-- usa p->terminal, no "wxt" fijo
     fflush(p->pipe);
-
+    
     free(safe_filename);
 
+    return PLOTTER_OK;
+}
+
+PlotterStatus plotter_set_terminal(Plotter *p, const char *terminal)
+{
+    if (strlen(terminal) >= sizeof(p->terminal))
+        return PLOTTER_INVALID_HANDLE;
+
+    strcpy(p->terminal, terminal);
+    fprintf(p->pipe, "set terminal %s size %d,%d\n", p->terminal, p->window_width, p->window_height);
     return PLOTTER_OK;
 }
 
